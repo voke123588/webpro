@@ -70,6 +70,10 @@ def profile():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
+        if db is None:
+            flash("Database connection error.")
+            return redirect(url_for('login'))
+
         action = request.form.get('action')
         email = request.form['email']
         password = request.form['password']
@@ -116,12 +120,18 @@ def login():
 
     return render_template('login.html')
 
+
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
+        if db is None:
+            flash("Database connection error.")
+            return redirect(url_for('forgot_password'))
+
         email = request.form['email']
-        cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
-        user = cursor.fetchone()
+        cursor_local = db.cursor()
+        cursor_local.execute("SELECT * FROM users WHERE email = %s", (email,))
+        user = cursor_local.fetchone()
         if user:
             return redirect(url_for('reset_password', email=email))
         else:
@@ -129,11 +139,17 @@ def forgot_password():
             return redirect(url_for('forgot_password'))
     return render_template('forgot_password.html')
 
+
 @app.route('/reset-password/<email>', methods=['GET', 'POST'])
 def reset_password(email):
     if request.method == 'POST':
+        if db is None:
+            flash("Database connection error.")
+            return redirect(url_for('login'))
+
         new_password = request.form['new_password']
-        cursor.execute("UPDATE users SET password = %s WHERE email = %s", (new_password, email))
+        cursor_local = db.cursor()
+        cursor_local.execute("UPDATE users SET password = %s WHERE email = %s", (new_password, email))
         db.commit()
         flash('Password updated. You can now log in.')
         return redirect(url_for('login'))
