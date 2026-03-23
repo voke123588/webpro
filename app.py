@@ -73,7 +73,7 @@ def login():
         action = request.form.get('action')
         email = request.form['email']
         password = request.form['password']
-        cursor_local = db.cursor(dictionary=True)
+        cursor_local = db.cursor()
 
         if action == 'signup':
             username = request.form.get('username')
@@ -108,7 +108,7 @@ def login():
             user = cursor_local.fetchone()
             if user:
                 session['user'] = email
-                session['username'] = user['username']
+                session['username'] = user[1]
                 return redirect(url_for('profile'))
             else:
                 flash('Invalid credentials.')
