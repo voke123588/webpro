@@ -198,6 +198,34 @@ def logout():
     flash('Logged out successfully.')
     return redirect(url_for('welcome'))
 
+@app.route('/create_tables')
+def create_tables():
+    try:
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                username VARCHAR(50),
+                email VARCHAR(100),
+                password VARCHAR(100)
+            );
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS payments (
+                id SERIAL PRIMARY KEY,
+                user_email VARCHAR(100),
+                phone VARCHAR(20),
+                plan VARCHAR(20),
+                method VARCHAR(20),
+                status VARCHAR(20)
+            );
+        """)
+
+        db.commit()
+        return "Tables created successfully!"
+    except Exception as e:
+        return str(e)
+
 # Important for Render
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 10000)))
