@@ -1,19 +1,16 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
-import mysql.connector
+import psycopg2
 import re
 import os
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key_here'
+app.secret_key = 'webpro_secret_2026_secure'
 
-# MySQL Configuration (safe connection)
+# PostgreSQL connection (Render)
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
 try:
-    db = mysql.connector.connect(
-        host='localhost',
-        user='root',
-        password='',
-        database='webproject'
-    )
+    db = psycopg2.connect(DATABASE_URL)
     cursor = db.cursor()
 except:
     db = None
