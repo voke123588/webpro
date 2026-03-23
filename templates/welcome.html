@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Welcome to Afromatch</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <header>
+    <h1>AFROMATCH</h1>
+    <nav>
+      <ul>
+        <li><a href="/login">Login / Register</a></li>
+        {% if username %}
+        <li class="greeting">Hi, {{ username }}</li>
+        {% endif %}
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Top Section with Buttons -->
+  <div class="services">
+    <div class="services-grid">
+      <div class="service-card"><a href="/login" style="text-decoration: none; color: #ff3366;">Escorts</a></div>
+      <div class="service-card">Videos</div>
+      <div class="service-card">Sexy Pictures</div>
+    </div>
+  </div>
+
+  <!-- Banner -->
+  <div class="group-photo">
+    <img src="{{ url_for('static', filename='images/banner.jpg') }}" alt="Banner">
+    <p style="margin-top: 20px; font-size: 1.1em; color: #555;">
+      Discover top-rated, verified ladies. Log in to view full details and book privately.
+    </p>
+  </div>
+
+  <!-- Basic Profiles -->
+  <h2 class="section-title">Preview Escorts</h2>
+  <div class="profiles">
+    {% for girl in girls %}
+    <div class="card">
+      <!-- Main Image -->
+      <img src="{{ url_for('static', filename='images/' + girl.img) }}" alt="{{ girl.name }}">
+
+      <!-- Name -->
+      <h3>{{ girl.name }}</h3>
+
+      <!-- Extra Photos -->
+      {% if girl.photos %}
+        <div class="extra-photos">
+          {% for photo in girl.photos %}
+            <img src="{{ url_for('static', filename='images/' + photo) }}" class="small-img">
+          {% endfor %}
+        </div>
+      {% else %}
+        <p><em>No photo available</em></p>
+      {% endif %}
+
+      <!-- Videos -->
+      {% if girl.videos %}
+        <div class="videos">
+          {% for video in girl.videos %}
+            <video width="100%" controls>
+              <source src="{{ url_for('static', filename='videos/' + video) }}" type="video/mp4">
+            </video>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p><em>No video available</em></p>
+      {% endif %}
+
+      <!-- Contact -->
+      <p><strong>Phone:</strong> {{ girl.phone }}</p>
+      <a href="{{ url_for('payment') }}" class="love-btn">📞 Call {{ girl.name }}</a>
+      <a href="{{ url_for('payment') }}" class="love-btn">💬 Chat with {{ girl.name }}</a>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Adult Content Footer -->
+  <footer>
+    <p>&copy; 2025 AFROMATCH. All rights reserved.</p>
+    <p style="color: red; margin-top: 10px;">
+      🔞 This site contains adult content and is strictly for persons aged 18 and above.
+    </p>
+  </footer>
+</body>
+</html>

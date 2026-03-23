@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Payment Verification</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9fbfe;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #003366;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+    main {
+      max-width: 700px;
+      margin: 30px auto;
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.2);
+    }
+    textarea, input, button {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 1em;
+    }
+    button {
+      background-color: #0066cc;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #004d99;
+    }
+    .disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Payment Verification</h1>
+    <p>You selected the <strong>{{ plan }}</strong> plan (KES {{ amount }})</p>
+  </header>
+
+  <main>
+    <h2>M-PESA Payment</h2>
+    <p>Please paste your full M-PESA confirmation message below:</p>
+
+    <form method="POST" action="{{ url_for('verify_payment') }}">
+      <textarea name="mpesa_message" rows="4" placeholder="e.g. QJ45XYZ Confirmed. Ksh500.00 sent to Till 123456..." required></textarea>
+      <input type="hidden" name="method" value="mpesa">
+      <input type="hidden" name="package" value="{{ plan }}">
+      <button type="submit">I've Paid via M-PESA</button>
+    </form>
+
+    <hr style="margin: 30px 0;">
+
+    <h2 style="color: #888;">Card Payment (Temporarily Unavailable)</h2>
+    <p>This method is currently not supported.</p>
+    <button class="disabled" disabled>Verify Card Payment</button>
+  </main>
+</body>
+</html>

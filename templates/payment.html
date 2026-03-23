@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Choose Your Plan</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <header>
+    <h1>Select a Package</h1>
+  </header>
+
+  <main class="pricing-container">
+    <div class="plan basic">
+      <h2>Basic</h2>
+      <p class="price">KES 200</p>
+      <ul>
+          <li>Limited Profile Access</li>
+          <li>Basic Messaging</li>
+          <li>No Location Filters</li>
+          <li>1 Contact Per Day</li>
+          <li>Low Profile Visibility</li>
+        </ul>
+      <a href="{{ url_for('verify') }}?plan=basic" class="btn">Choose Basic</a>
+    </div>
+
+    <div class="plan standard">
+      <h2>Standard</h2>
+      <p class="price">KES 500</p>
+      <ul>
+          <li>Unlimited Profiles</li>
+          <li>Full Messaging</li>
+          <li>Location Filtering</li>
+          <li>5 Contacts Per Day</li>
+          <li>Medium Profile Visibility</li>
+        </ul>
+      <a href="{{ url_for('verify') }}?plan=standard" class="btn">Choose Standard</a>
+    </div>
+
+    <div class="plan premium recommended">
+      <h2>Premium</h2>
+      <p class="price">KES 1000</p>
+      <ul>
+          <li>VIP Profiles + Verified Escorts</li>
+          <li>Unlimited Messaging</li>
+          <li>Real-time Matching</li>
+          <li>Unlimited Contacts</li>
+          <li>High Profile Boosting</li>
+        </ul>
+      <a href="{{ url_for('verify') }}?plan=premium" class="btn">Choose Premium</a>
+    </div>
+  </main>
+</body>
+</html>
