@@ -167,8 +167,19 @@ def verify():
         return redirect(url_for('login'))
 
     plan = request.args.get('plan')
-    prices = {'basic': 200, 'standard': 500, 'premium': 1000}
-    amount = prices.get(plan, 0)
+
+    prices = {
+        'basic': 200,
+        'standard': 500,
+        'premium': 1000
+    }
+
+    if plan not in prices:
+        flash("Please select a payment plan.")
+        return redirect(url_for('payment'))
+
+    amount = prices[plan]
+
     return render_template('verify.html', plan=plan, amount=amount)
 
 @app.route('/verify_payment', methods=['POST'])
