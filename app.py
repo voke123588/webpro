@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 import psycopg2
 import re
 import os
-import requests   # ADDED
+import requests
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
@@ -21,39 +21,21 @@ except:
     db = None
     cursor = None
 
-# Escort data
+# Escort preview data
 escorts = [
     {
         'name': 'Tatiana',
         'img': 'tatiana.jpg',
         'photos': ['tatiana1.jpg', 'tatiana2.jpg'],
         'videos': ['tatiana.mp4'],
-        'phone': '0712345678',
-        'gender': 'Female',
-        'orientation': 'Straight',
-        'age': 25,
-        'nationality': 'Kenyan',
-        'county': 'Nairobi',
-        'city': 'Westlands',
-        'services': 'Massage, Companionship, Escort',
-        'description': 'I am passionate, discreet, and love a good conversation.',
-        'more': 'Available any day, any time. Respect and hygiene is a must.'
+        'phone': '0712345678'
     },
     {
         'name': 'Bella',
         'img': 'bella.jpg',
         'photos': [],
         'videos': [],
-        'phone': '0798765432',
-        'gender': 'Female',
-        'orientation': 'Bisexual',
-        'age': 23,
-        'nationality': 'Ugandan',
-        'county': 'Mombasa',
-        'city': 'Nyali',
-        'services': 'Escort, Overnight Stay',
-        'description': 'Fun, friendly, and adventurous.',
-        'more': 'Best for weekend getaways. Fluent in English and Swahili.'
+        'phone': '0798765432'
     }
 ]
 
@@ -67,7 +49,6 @@ def welcome():
     return render_template('welcome.html', girls=girls_preview, username=username)
 
 
-# MODIFIED: Now loads profiles from database
 @app.route('/profile')
 def profile():
     if 'user' not in session:
@@ -132,7 +113,6 @@ def login():
 
     return render_template('login.html')
 
-
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
@@ -167,11 +147,13 @@ def reset_password(email):
         return redirect(url_for('login'))
     return render_template('reset_password.html', email=email)
 
+
 @app.route('/payment')
 def payment():
     if 'user' not in session:
         return redirect(url_for('login'))
     return render_template('payment.html')
+
 
 @app.route('/verify')
 def verify():
@@ -195,16 +177,30 @@ def verify():
     return render_template('verify.html', plan=plan, amount=amount)
 
 
-# NEW: PAYHERO STK PUSH
-@app.route('/stk_push', methods=['POST'])
+# FIXED STK PUSH
+@app.route('/stk_push', methods=['GET', 'POST'])
 def stk_push():
     if 'user' not in session:
         return redirect(url_for('login'))
 
+    if request.method == 'GET':
+        return redirect(url_for('payment'))
+
     phone = request.form.get('phone')
-    amount = request.form.get('amount')
     plan = request.form.get('plan')
     user_email = session['user']
+
+    prices = {
+        'basic': 200,
+        'standard': 500,
+        'premium': 1000
+    }
+
+    amount = prices.get(plan)
+
+    if not phone or not amount:
+        flash("Missing phone or plan.")
+        return redirect(url_for('payment'))
 
     url = "https://backend.payhero.co.ke/api/v2/payments"
 
@@ -221,19 +217,23 @@ def stk_push():
         "provider": "m-pesa"
     }
 
-    requests.post(url, json=payload, headers=headers)
+    try:
+        response = requests.post(url, json=payload, headers=headers)
+        print(response.text)
 
-    cursor.execute("""
-        INSERT INTO payments (user_email, phone, plan, method, status)
-        VALUES (%s, %s, %s, %s, %s)
-    """, (user_email, phone, plan, 'mpesa', 'pending'))
+        cursor.execute("""
+            INSERT INTO payments (user_email, phone, plan, method, status)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (user_email, phone, plan, 'mpesa', 'pending'))
 
-    db.commit()
+        db.commit()
 
-    return redirect('https://www.nairobihot.com/')
+        return redirect('https://www.nairobihot.com/')
+
+    except Exception as e:
+        return str(e)
 
 
-# NEW: PAYHERO CALLBACK
 @app.route('/payhero_callback', methods=['POST'])
 def payhero_callback():
     data = request.json
@@ -256,7 +256,6 @@ def payhero_callback():
     return {"status": "received"}
 
 
-# NEW: ADMIN LOGIN
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
     if request.method == 'POST':
@@ -272,7 +271,6 @@ def admin():
     return render_template('admin_login.html')
 
 
-# NEW: ADMIN DASHBOARD
 @app.route('/admin/dashboard')
 def admin_dashboard():
     if 'admin' not in session:
@@ -284,7 +282,6 @@ def admin_dashboard():
     return render_template('admin_dashboard.html', profiles=profiles)
 
 
-# NEW: ADD PROFILE
 @app.route('/admin/add_profile', methods=['POST'])
 def add_profile():
     if 'admin' not in session:
@@ -310,7 +307,6 @@ def add_profile():
     return redirect(url_for('admin_dashboard'))
 
 
-# NEW: SEARCH
 @app.route('/search')
 def search():
     city = request.args.get('city')
@@ -321,44 +317,6 @@ def search():
     return render_template('profile.html', girls=results)
 
 
-@app.route('/verify_payment', methods=['POST'])
-def verify_payment():
-    if 'user' not in session:
-        return redirect(url_for('login'))
-
-    method = request.form.get('method')
-    plan = request.form.get('package')
-    user_email = session['user']
-
-    prices = {'basic': 200, 'standard': 500, 'premium': 1000}
-    expected_amount = prices.get(plan)
-
-    if method == 'mpesa':
-        mpesa_message = request.form.get('mpesa_message')
-        match = re.search(r'Ksh\s?(\d+(?:\.\d{1,2})?)', mpesa_message)
-
-        if match:
-            try:
-                amount_sent = float(match.group(1))
-                if amount_sent == expected_amount:
-                    cursor.execute("""
-                        INSERT INTO payments (user_email, phone, plan, method, status)
-                        VALUES (%s, %s, %s, %s, %s)
-                    """, (user_email, 'mpesa message', plan, 'mpesa', 'verified'))
-                    db.commit()
-                    return redirect('https://www.nairobihot.com/')
-                else:
-                    flash(f"Ksh {amount_sent} sent does not match expected {expected_amount}.")
-            except ValueError:
-                flash("Error reading amount from message.")
-        else:
-            flash("Invalid M-PESA message. Could not extract amount.")
-        return redirect(url_for('verify'))
-
-    flash("Card payments are not supported.")
-    return redirect(url_for('verify'))
-
-
 @app.route('/logout')
 def logout():
     session.clear()
@@ -366,7 +324,6 @@ def logout():
     return redirect(url_for('welcome'))
 
 
-# UPDATED: CREATE TABLES (added profiles table)
 @app.route('/create_tables')
 def create_tables():
     try:
@@ -407,9 +364,9 @@ def create_tables():
         return "Tables created successfully!"
 
     except Exception as e:
-        db.rollback()   # IMPORTANT FIX
+        db.rollback()
         return str(e)
 
-# Important for Render
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 10000)))
