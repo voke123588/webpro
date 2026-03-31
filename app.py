@@ -202,6 +202,10 @@ def stk_push():
         flash("Missing phone or plan.")
         return redirect(url_for('payment'))
 
+    # Convert phone to 254 format
+    if phone.startswith("0"):
+        phone = "254" + phone[1:]
+
     url = "https://backend.payhero.co.ke/api/v2/payments"
 
     headers = {
