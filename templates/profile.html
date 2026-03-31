@@ -1,104 +1,42 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Afromatch Profiles</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>Profiles</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-  <header>
-    <h1>AFROMATCH</h1>
-    <nav>
-      <ul>
-        <li><a href="/">Home</a></li>
-        <li><a href="/logout">Logout</a></li>
-        <li class="greeting">Hi, {{ username }}</li>
-      </ul>
-    </nav>
-  </header>
 
-  <!-- Top Buttons -->
-  <div class="services">
-    <div class="services-grid">
-      <div class="service-card"><a href="#" style="text-decoration: none; color: #ff3366;">Escorts</a></div>
-      <div class="service-card">Videos</div>
-      <div class="service-card">Sexy Pictures</div>
-    </div>
-  </div>
+<header>
+    <h1>Premium Escorts</h1>
+    <a href="/logout">Logout</a>
+    <button onclick="toggleDarkMode()">Dark Mode</button>
+</header>
 
-  <!-- Site Description Banner -->
-  <div class="group-photo">
-    <img src="{{ url_for('static', filename='images/banner.jpg') }}" alt="Banner">
-    <p style="margin-top: 20px; font-size: 1.1em; color: #555;">
-      View our trusted, top-rated ladies available for exclusive bookings in Nairobi.
-    </p>
-  </div>
+<div style="text-align:center; margin:20px;">
+    <form method="GET" action="/search">
+        <input type="text" name="city" placeholder="Search by city">
+        <button type="submit">Search</button>
+    </form>
+</div>
 
-  <!-- Profiles List -->
-  <h2 class="section-title">Available Escorts</h2>
-  <div class="profiles">
+<div class="profiles">
     {% for girl in girls %}
     <div class="card">
-      <!-- Main Image -->
-      <img src="{{ url_for('static', filename='images/' + girl.img) }}" alt="{{ girl.name }}">
-
-      <!-- Name -->
-      <h3>{{ girl.name }}</h3>
-
-      <!-- Extra Photos -->
-      {% if girl.photos %}
-        <div class="extra-photos">
-          {% for photo in girl.photos %}
-            <img src="{{ url_for('static', filename='images/' + photo) }}" class="small-img">
-          {% endfor %}
-        </div>
-      {% else %}
-        <p><em>No photo available</em></p>
-      {% endif %}
-
-      <!-- Videos -->
-      {% if girl.videos %}
-        <div class="videos">
-          {% for video in girl.videos %}
-            <video width="100%" controls>
-              <source src="{{ url_for('static', filename='videos/' + video) }}" type="video/mp4">
-            </video>
-          {% endfor %}
-        </div>
-      {% else %}
-        <p><em>No video available</em></p>
-      {% endif %}
-
-      <!-- Phone -->
-      <p><strong>Phone:</strong> {{ girl.phone }}</p>
-
-      <!-- Buttons -->
-      <a href="{{ url_for('payment') }}" class="love-btn">📞 Call {{ girl.name }}</a>
-      <a href="{{ url_for('payment') }}" class="love-btn">💬 Chat with {{ girl.name }}</a>
-
-      <!-- Full Profile Info -->
-      <div class="profile-details">
-        <p><strong>Gender:</strong> {{ girl.gender }}</p>
-        <p><strong>Orientation:</strong> {{ girl.orientation }}</p>
-        <p><strong>Age:</strong> {{ girl.age }}</p>
-        <p><strong>Nationality:</strong> {{ girl.nationality }}</p>
-        <p><strong>County:</strong> {{ girl.county }}</p>
-        <p><strong>Town/City:</strong> {{ girl.city }}</p>
-        <p><strong>Services:</strong> {{ girl.services }}</p>
-        <p><strong>Description:</strong> {{ girl.description }}</p>
-        <p><strong>More About Me:</strong> {{ girl.more }}</p>
-      </div>
+        <img src="{{ url_for('static', filename='images/' + girl[7]) }}">
+        <h3>{{ girl[1] }} ({{ girl[2] }})</h3>
+        <p>{{ girl[3] }}</p>
+        <p>{{ girl[4] }}</p>
+        <a class="call-btn" href="tel:{{ girl[6] }}">Call</a>
     </div>
     {% endfor %}
-  </div>
+</div>
 
-  <!-- Adult Content Footer -->
-  <footer>
-    <p>&copy; 2025 AFROMATCH. All rights reserved.</p>
-    <p style="color: red; margin-top: 10px;">
-      🔞 This site contains adult content and is strictly for persons aged 18 and above.
-    </p>
-  </footer>
+<script>
+function toggleDarkMode() {
+    document.body.classList.toggle("dark-mode");
+}
+</script>
+
 </body>
 </html>

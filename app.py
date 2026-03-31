@@ -4,6 +4,11 @@ import re
 import os
 import requests   # ADDED
 
+from werkzeug.utils import secure_filename
+
+UPLOAD_FOLDER = 'static/images'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 app = Flask(__name__)
 app.secret_key = 'webpro_secret_2026_secure'
 
@@ -293,12 +298,15 @@ def add_profile():
     services = request.form.get('services')
     description = request.form.get('description')
     phone = request.form.get('phone')
-    image = request.form.get('image')
+
+    image_file = request.files['image']
+    filename = secure_filename(image_file.filename)
+    image_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
     cursor.execute("""
         INSERT INTO profiles (name, age, city, services, description, phone, image)
         VALUES (%s, %s, %s, %s, %s, %s, %s)
-    """, (name, age, city, services, description, phone, image))
+    """, (name, age, city, services, description, phone, filename))
 
     db.commit()
     return redirect(url_for('admin_dashboard'))
