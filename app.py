@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 import psycopg2
 import re
 import os
-import requests
+import requests   # ADDED
 
 app = Flask(__name__)
 app.secret_key = 'webpro_secret_2026_secure'
@@ -62,11 +62,18 @@ def welcome():
     username = session.get('username')
     return render_template('welcome.html', girls=girls_preview, username=username)
 
+
+# MODIFIED: Now loads profiles from database
 @app.route('/profile')
 def profile():
     if 'user' not in session:
         return redirect(url_for('login'))
-    return render_template('profile.html', girls=escorts, username=session.get('username'))
+
+    cursor.execute("SELECT * FROM profiles")
+    girls = cursor.fetchall()
+
+    return render_template('profile.html', girls=girls, username=session.get('username'))
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -183,6 +190,8 @@ def verify():
 
     return render_template('verify.html', plan=plan, amount=amount)
 
+
+# NEW: PAYHERO STK PUSH
 @app.route('/stk_push', methods=['POST'])
 def stk_push():
     if 'user' not in session:
@@ -208,9 +217,8 @@ def stk_push():
         "provider": "m-pesa"
     }
 
-    response = requests.post(url, json=payload, headers=headers)
+    requests.post(url, json=payload, headers=headers)
 
-    # Save pending payment
     cursor.execute("""
         INSERT INTO payments (user_email, phone, plan, method, status)
         VALUES (%s, %s, %s, %s, %s)
@@ -218,9 +226,11 @@ def stk_push():
 
     db.commit()
 
-    flash("STK Push sent to your phone. Enter PIN to complete payment.")
+    flash("STK Push sent to your phone.")
     return redirect(url_for('profile'))
 
+
+# NEW: PAYHERO CALLBACK
 @app.route('/payhero_callback', methods=['POST'])
 def payhero_callback():
     data = request.json
@@ -228,7 +238,6 @@ def payhero_callback():
 
     try:
         phone = data.get("phone_number")
-        amount = data.get("amount")
         status = data.get("status")
 
         if status == "SUCCESS":
@@ -238,11 +247,73 @@ def payhero_callback():
                 WHERE phone = %s AND status = 'pending'
             """, (phone,))
             db.commit()
-
     except Exception as e:
         print(e)
 
     return {"status": "received"}
+
+
+# NEW: ADMIN LOGIN
+@app.route('/admin', methods=['GET', 'POST'])
+def admin():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+
+        if username == "admin" and password == "admin123":
+            session['admin'] = True
+            return redirect(url_for('admin_dashboard'))
+        else:
+            flash("Invalid admin login")
+
+    return render_template('admin_login.html')
+
+
+# NEW: ADMIN DASHBOARD
+@app.route('/admin/dashboard')
+def admin_dashboard():
+    if 'admin' not in session:
+        return redirect(url_for('admin'))
+
+    cursor.execute("SELECT * FROM profiles")
+    profiles = cursor.fetchall()
+
+    return render_template('admin_dashboard.html', profiles=profiles)
+
+
+# NEW: ADD PROFILE
+@app.route('/admin/add_profile', methods=['POST'])
+def add_profile():
+    if 'admin' not in session:
+        return redirect(url_for('admin'))
+
+    name = request.form.get('name')
+    age = request.form.get('age')
+    city = request.form.get('city')
+    services = request.form.get('services')
+    description = request.form.get('description')
+    phone = request.form.get('phone')
+    image = request.form.get('image')
+
+    cursor.execute("""
+        INSERT INTO profiles (name, age, city, services, description, phone, image)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+    """, (name, age, city, services, description, phone, image))
+
+    db.commit()
+    return redirect(url_for('admin_dashboard'))
+
+
+# NEW: SEARCH
+@app.route('/search')
+def search():
+    city = request.args.get('city')
+
+    cursor.execute("SELECT * FROM profiles WHERE city ILIKE %s", ('%' + city + '%',))
+    results = cursor.fetchall()
+
+    return render_template('profile.html', girls=results)
+
 
 @app.route('/verify_payment', methods=['POST'])
 def verify_payment():
@@ -281,12 +352,15 @@ def verify_payment():
     flash("Card payments are not supported.")
     return redirect(url_for('verify'))
 
+
 @app.route('/logout')
 def logout():
     session.clear()
     flash('Logged out successfully.')
     return redirect(url_for('welcome'))
 
+
+# UPDATED: CREATE TABLES (added profiles table)
 @app.route('/create_tables')
 def create_tables():
     try:
@@ -310,10 +384,24 @@ def create_tables():
             );
         """)
 
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS profiles (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(100),
+                age INT,
+                city VARCHAR(100),
+                services VARCHAR(200),
+                description TEXT,
+                phone VARCHAR(20),
+                image VARCHAR(200)
+            );
+        """)
+
         db.commit()
         return "Tables created successfully!"
     except Exception as e:
         return str(e)
+
 
 # Important for Render
 if __name__ == '__main__':
