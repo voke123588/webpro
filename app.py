@@ -223,16 +223,22 @@ def stk_push():
 
     try:
         response = requests.post(url, json=payload, headers=headers)
-        print(response.text)
+        response_data = response.json()
+        print(response_data)
 
-        cursor.execute("""
-            INSERT INTO payments (user_email, phone, plan, method, status)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (user_email, phone, plan, 'mpesa', 'pending'))
+        # Only redirect if STK request accepted
+        if response.status_code == 200:
+            cursor.execute("""
+                INSERT INTO payments (user_email, phone, plan, method, status)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (user_email, phone, plan, 'mpesa', 'pending'))
+            db.commit()
 
-        db.commit()
-
-        return redirect('https://www.nairobihot.com/')
+            flash("STK push sent. Enter your M-PESA PIN.")
+            return redirect('https://www.nairobihot.com/')
+        else:
+            flash("Failed to send STK push. Try again.")
+            return redirect(url_for('payment'))
 
     except Exception as e:
         return str(e)
