@@ -3,14 +3,13 @@ import psycopg2
 import re
 import os
 import requests   # ADDED
-
 from werkzeug.utils import secure_filename
-
-UPLOAD_FOLDER = 'static/images'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 app = Flask(__name__)
 app.secret_key = 'webpro_secret_2026_secure'
+
+UPLOAD_FOLDER = 'static/images'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # PostgreSQL connection (Render)
 DATABASE_URL = os.environ.get("DATABASE_URL")
