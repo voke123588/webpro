@@ -399,9 +399,10 @@ def create_tables():
 
         db.commit()
         return "Tables created successfully!"
-    except Exception as e:
-        return str(e)
 
+    except Exception as e:
+        db.rollback()   # IMPORTANT FIX
+        return str(e)
 
 # Important for Render
 if __name__ == '__main__':
