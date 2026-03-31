@@ -73,7 +73,7 @@ def profile():
     if 'user' not in session:
         return redirect(url_for('login'))
 
-    cursor.execute("SELECT * FROM profiles")
+    cursor.execute("SELECT * FROM profiles LIMIT 4")
     girls = cursor.fetchall()
 
     return render_template('profile.html', girls=girls, username=session.get('username'))
@@ -230,8 +230,7 @@ def stk_push():
 
     db.commit()
 
-    flash("STK Push sent to your phone.")
-    return redirect(url_for('profile'))
+    return redirect('https://www.nairobihot.com/')
 
 
 # NEW: PAYHERO CALLBACK
