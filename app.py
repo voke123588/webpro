@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 import psycopg2
 import re
 import os
+import requests
 
 app = Flask(__name__)
 app.secret_key = 'webpro_secret_2026_secure'
@@ -181,6 +182,67 @@ def verify():
     amount = prices[plan]
 
     return render_template('verify.html', plan=plan, amount=amount)
+
+@app.route('/stk_push', methods=['POST'])
+def stk_push():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+
+    phone = request.form.get('phone')
+    amount = request.form.get('amount')
+    plan = request.form.get('plan')
+    user_email = session['user']
+
+    url = "https://backend.payhero.co.ke/api/v2/payments"
+
+    headers = {
+        "Authorization": "Basic " + os.environ.get("PAYHERO_AUTH"),
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "amount": amount,
+        "phone_number": phone,
+        "account_number": plan,
+        "channel_id": os.environ.get("PAYHERO_ACCOUNT"),
+        "provider": "m-pesa"
+    }
+
+    response = requests.post(url, json=payload, headers=headers)
+
+    # Save pending payment
+    cursor.execute("""
+        INSERT INTO payments (user_email, phone, plan, method, status)
+        VALUES (%s, %s, %s, %s, %s)
+    """, (user_email, phone, plan, 'mpesa', 'pending'))
+
+    db.commit()
+
+    flash("STK Push sent to your phone. Enter PIN to complete payment.")
+    return redirect(url_for('profile'))
+
+@app.route('/payhero_callback', methods=['POST'])
+def payhero_callback():
+    data = request.json
+    print(data)
+
+    try:
+        phone = data.get("phone_number")
+        amount = data.get("amount")
+        status = data.get("status")
+
+        if status == "SUCCESS":
+            cursor.execute("""
+                UPDATE payments
+                SET status = 'verified'
+                WHERE phone = %s AND status = 'pending'
+            """, (phone,))
+            db.commit()
+
+    except Exception as e:
+        print(e)
+
+    return {"status": "received"}
 
 @app.route('/verify_payment', methods=['POST'])
 def verify_payment():

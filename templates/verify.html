@@ -47,6 +47,12 @@
       background: #ccc;
       cursor: not-allowed;
     }
+    .note {
+      background: #e6f0ff;
+      padding: 10px;
+      border-left: 4px solid #0066cc;
+      margin-bottom: 15px;
+    }
   </style>
 </head>
 <body>
@@ -56,14 +62,22 @@
   </header>
 
   <main>
-    <h2>M-PESA Payment</h2>
-    <p>Please paste your full M-PESA confirmation message below:</p>
+    <h2>M-PESA STK Push Payment</h2>
 
-    <form method="POST" action="{{ url_for('verify_payment') }}">
-      <textarea name="mpesa_message" rows="4" placeholder="e.g. QJ45XYZ Confirmed. Ksh500.00 sent to Till 123456..." required></textarea>
-      <input type="hidden" name="method" value="mpesa">
-      <input type="hidden" name="package" value="{{ plan }}">
-      <button type="submit">I've Paid via M-PESA</button>
+    <div class="note">
+      Enter your M-Pesa phone number below.<br>
+      You will receive a payment prompt on your phone.<br>
+      Enter your M-Pesa PIN to complete payment.
+    </div>
+
+    <form method="POST" action="{{ url_for('stk_push') }}">
+      <input type="hidden" name="plan" value="{{ plan }}">
+      <input type="hidden" name="amount" value="{{ amount }}">
+
+      <label>Phone Number (2547XXXXXXXX)</label>
+      <input type="text" name="phone" placeholder="2547XXXXXXXX" required>
+
+      <button type="submit">Pay via M-PESA</button>
     </form>
 
     <hr style="margin: 30px 0;">
